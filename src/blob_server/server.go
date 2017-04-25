@@ -1,4 +1,4 @@
-package blob_server
+package main
 
 import (
 	"crypto/rand"
@@ -10,13 +10,19 @@ import (
 	"flag"
 	"net"
 	"log"
-	"github.com/golang/protobuf/protoc-gen-go/grpc"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
+
+	pb "gdfs/src/contracts"
 )
 
 var (
 	dataDir = flag.String("dataDir", "/tmp/data/", "Data directory for blob server")
-	port       = flag.Int("port", 9000, "The server port")
+	port = flag.Int("port", 9000, "The server port")
 )
+
+type blobServer struct {}
 
 func check(e error) {
 	if e != nil {
@@ -24,26 +30,52 @@ func check(e error) {
 	}
 }
 
-func (s *blobsServer) GetBlob(ctx context.Context, filename *pb.Filename) (*pb.Data, error) {
-	name := dataDir + filename.filename
+func (s *blobServer) CreateBlob(ctx context.Context, putData *pb.PutData) (*pb.Empty, error) {
+	grpclog.Println("CreateBlob called!")
+	var err = errors.New("[Not implemented]")
+	return &pb.Empty{}, err
+}
+
+func (s *blobServer) ReadBlob(ctx context.Context, filename *pb.Filename) (*pb.Data, error) {
+	grpclog.Println("ReadBlob called!")
+	name := *dataDir + filename.Filename
 	if _, err := os.Stat(name); err == nil {
 		dat, err := ioutil.ReadFile(name)
 		check(err)
 		return &pb.Data{dat}, nil
 	}
 	var err = errors.New("blob server: file not found")
-	return &pb.Data{}, nil
+	return &pb.Data{}, err
+}
+
+func (s *blobServer) UpdateBlob(ctx context.Context, putData *pb.PutData) (*pb.Empty, error) {
+	grpclog.Println("UpdateBlob called!")
+	var err = errors.New("[Not implemented]")
+	return &pb.Empty{}, err
+}
+
+func (s *blobServer) DeleteBlob(ctx context.Context, filename *pb.Filename) (*pb.Empty, error) {
+	grpclog.Println("Delete called!")
+	var err = errors.New("[Not implemented]")
+	return &pb.Empty{}, err
+}
+
+func (s *blobServer) ListBlobs(ctx context.Context, empty *pb.Empty) (*pb.BlobList, error) {
+	grpclog.Println("ListBlobs called!")
+	var err = errors.New("[Not implemented]")
+	return &pb.BlobList{}, err
 }
 
 func main() {
-	fmt.Println(newUUID())
+	//grpclog.Println(newUUID())
+	grpclog.Println("Blob server starting!")
 	flag.Parse()
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer()
-	pb.RegisterRouteGuideServer(grpcServer, new(BlobsServer))
+	pb.RegisterBlobsServer(grpcServer, new(blobServer))
 	grpcServer.Serve(lis)
 }
 

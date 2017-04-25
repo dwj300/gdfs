@@ -11,6 +11,10 @@ It is generated from these files:
 It has these top-level messages:
 	Filename
 	Data
+	PutData
+	Empty
+	BlobList
+	Blob
 */
 package blob_server
 
@@ -66,9 +70,77 @@ func (m *Data) GetData() []byte {
 	return nil
 }
 
+type PutData struct {
+	Filename string `protobuf:"bytes,1,opt,name=filename" json:"filename,omitempty"`
+	Data     []byte `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+}
+
+func (m *PutData) Reset()                    { *m = PutData{} }
+func (m *PutData) String() string            { return proto.CompactTextString(m) }
+func (*PutData) ProtoMessage()               {}
+func (*PutData) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
+func (m *PutData) GetFilename() string {
+	if m != nil {
+		return m.Filename
+	}
+	return ""
+}
+
+func (m *PutData) GetData() []byte {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type Empty struct {
+}
+
+func (m *Empty) Reset()                    { *m = Empty{} }
+func (m *Empty) String() string            { return proto.CompactTextString(m) }
+func (*Empty) ProtoMessage()               {}
+func (*Empty) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+type BlobList struct {
+	Blobs []*Blob `protobuf:"bytes,1,rep,name=blobs" json:"blobs,omitempty"`
+}
+
+func (m *BlobList) Reset()                    { *m = BlobList{} }
+func (m *BlobList) String() string            { return proto.CompactTextString(m) }
+func (*BlobList) ProtoMessage()               {}
+func (*BlobList) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+
+func (m *BlobList) GetBlobs() []*Blob {
+	if m != nil {
+		return m.Blobs
+	}
+	return nil
+}
+
+type Blob struct {
+	Filename string `protobuf:"bytes,1,opt,name=Filename" json:"Filename,omitempty"`
+}
+
+func (m *Blob) Reset()                    { *m = Blob{} }
+func (m *Blob) String() string            { return proto.CompactTextString(m) }
+func (*Blob) ProtoMessage()               {}
+func (*Blob) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+
+func (m *Blob) GetFilename() string {
+	if m != nil {
+		return m.Filename
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*Filename)(nil), "blob_server.Filename")
 	proto.RegisterType((*Data)(nil), "blob_server.Data")
+	proto.RegisterType((*PutData)(nil), "blob_server.PutData")
+	proto.RegisterType((*Empty)(nil), "blob_server.Empty")
+	proto.RegisterType((*BlobList)(nil), "blob_server.BlobList")
+	proto.RegisterType((*Blob)(nil), "blob_server.Blob")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -82,7 +154,11 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for Blobs service
 
 type BlobsClient interface {
-	GetBlob(ctx context.Context, in *Filename, opts ...grpc.CallOption) (*Data, error)
+	CreateBlob(ctx context.Context, in *PutData, opts ...grpc.CallOption) (*Empty, error)
+	ReadBlob(ctx context.Context, in *Filename, opts ...grpc.CallOption) (*Data, error)
+	UpdateBlob(ctx context.Context, in *PutData, opts ...grpc.CallOption) (*Empty, error)
+	DeleteBlob(ctx context.Context, in *Filename, opts ...grpc.CallOption) (*Empty, error)
+	ListBlobs(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*BlobList, error)
 }
 
 type blobsClient struct {
@@ -93,9 +169,45 @@ func NewBlobsClient(cc *grpc.ClientConn) BlobsClient {
 	return &blobsClient{cc}
 }
 
-func (c *blobsClient) GetBlob(ctx context.Context, in *Filename, opts ...grpc.CallOption) (*Data, error) {
+func (c *blobsClient) CreateBlob(ctx context.Context, in *PutData, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := grpc.Invoke(ctx, "/blob_server.Blobs/CreateBlob", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *blobsClient) ReadBlob(ctx context.Context, in *Filename, opts ...grpc.CallOption) (*Data, error) {
 	out := new(Data)
-	err := grpc.Invoke(ctx, "/blob_server.Blobs/GetBlob", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/blob_server.Blobs/ReadBlob", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *blobsClient) UpdateBlob(ctx context.Context, in *PutData, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := grpc.Invoke(ctx, "/blob_server.Blobs/UpdateBlob", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *blobsClient) DeleteBlob(ctx context.Context, in *Filename, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := grpc.Invoke(ctx, "/blob_server.Blobs/DeleteBlob", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *blobsClient) ListBlobs(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*BlobList, error) {
+	out := new(BlobList)
+	err := grpc.Invoke(ctx, "/blob_server.Blobs/ListBlobs", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -105,27 +217,103 @@ func (c *blobsClient) GetBlob(ctx context.Context, in *Filename, opts ...grpc.Ca
 // Server API for Blobs service
 
 type BlobsServer interface {
-	GetBlob(context.Context, *Filename) (*Data, error)
+	CreateBlob(context.Context, *PutData) (*Empty, error)
+	ReadBlob(context.Context, *Filename) (*Data, error)
+	UpdateBlob(context.Context, *PutData) (*Empty, error)
+	DeleteBlob(context.Context, *Filename) (*Empty, error)
+	ListBlobs(context.Context, *Empty) (*BlobList, error)
 }
 
 func RegisterBlobsServer(s *grpc.Server, srv BlobsServer) {
 	s.RegisterService(&_Blobs_serviceDesc, srv)
 }
 
-func _Blobs_GetBlob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Blobs_CreateBlob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PutData)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BlobsServer).CreateBlob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/blob_server.Blobs/CreateBlob",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BlobsServer).CreateBlob(ctx, req.(*PutData))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Blobs_ReadBlob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Filename)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BlobsServer).GetBlob(ctx, in)
+		return srv.(BlobsServer).ReadBlob(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/blob_server.Blobs/GetBlob",
+		FullMethod: "/blob_server.Blobs/ReadBlob",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BlobsServer).GetBlob(ctx, req.(*Filename))
+		return srv.(BlobsServer).ReadBlob(ctx, req.(*Filename))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Blobs_UpdateBlob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PutData)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BlobsServer).UpdateBlob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/blob_server.Blobs/UpdateBlob",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BlobsServer).UpdateBlob(ctx, req.(*PutData))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Blobs_DeleteBlob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Filename)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BlobsServer).DeleteBlob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/blob_server.Blobs/DeleteBlob",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BlobsServer).DeleteBlob(ctx, req.(*Filename))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Blobs_ListBlobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BlobsServer).ListBlobs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/blob_server.Blobs/ListBlobs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BlobsServer).ListBlobs(ctx, req.(*Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -135,8 +323,24 @@ var _Blobs_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*BlobsServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetBlob",
-			Handler:    _Blobs_GetBlob_Handler,
+			MethodName: "CreateBlob",
+			Handler:    _Blobs_CreateBlob_Handler,
+		},
+		{
+			MethodName: "ReadBlob",
+			Handler:    _Blobs_ReadBlob_Handler,
+		},
+		{
+			MethodName: "UpdateBlob",
+			Handler:    _Blobs_UpdateBlob_Handler,
+		},
+		{
+			MethodName: "DeleteBlob",
+			Handler:    _Blobs_DeleteBlob_Handler,
+		},
+		{
+			MethodName: "ListBlobs",
+			Handler:    _Blobs_ListBlobs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -146,14 +350,22 @@ var _Blobs_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("blob_server.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 135 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0x12, 0x4c, 0xca, 0xc9, 0x4f,
-	0x8a, 0x2f, 0x4e, 0x2d, 0x2a, 0x4b, 0x2d, 0xd2, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x46,
-	0x12, 0x52, 0x52, 0xe3, 0xe2, 0x70, 0xcb, 0xcc, 0x49, 0xcd, 0x4b, 0xcc, 0x4d, 0x15, 0x92, 0xe2,
-	0xe2, 0x48, 0x83, 0xb2, 0x25, 0x18, 0x15, 0x18, 0x35, 0x38, 0x83, 0xe0, 0x7c, 0x25, 0x29, 0x2e,
-	0x16, 0x97, 0xc4, 0x92, 0x44, 0x21, 0x21, 0x2e, 0x96, 0x94, 0xc4, 0x92, 0x44, 0xb0, 0x3c, 0x4f,
-	0x10, 0x98, 0x6d, 0x64, 0xc7, 0xc5, 0xea, 0x94, 0x93, 0x9f, 0x54, 0x2c, 0x64, 0xca, 0xc5, 0xee,
-	0x9e, 0x5a, 0x02, 0x62, 0x0b, 0x89, 0xea, 0x21, 0x5b, 0x0c, 0xb3, 0x42, 0x4a, 0x10, 0x45, 0x18,
-	0x64, 0xa2, 0x12, 0x43, 0x12, 0x1b, 0xd8, 0x5d, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0xf9,
-	0x8c, 0xa4, 0xe3, 0xac, 0x00, 0x00, 0x00,
+	// 267 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x9c, 0x52, 0xcd, 0x4a, 0xc3, 0x40,
+	0x10, 0x4e, 0x6a, 0x62, 0xd3, 0xaf, 0x5e, 0xba, 0x58, 0x28, 0x7b, 0x2a, 0x73, 0xd0, 0x9e, 0x7a,
+	0x68, 0x41, 0xda, 0xab, 0xd6, 0x9e, 0x3c, 0x48, 0xc0, 0xb3, 0x6c, 0xc8, 0x08, 0x85, 0xd4, 0x84,
+	0x64, 0x15, 0x7c, 0x23, 0x1f, 0x53, 0x66, 0x93, 0x96, 0x44, 0xab, 0x07, 0x6f, 0x3b, 0x33, 0xdf,
+	0xdf, 0x0c, 0x8b, 0x51, 0x92, 0xe5, 0xc9, 0x73, 0xc5, 0xe5, 0x3b, 0x97, 0xf3, 0xa2, 0xcc, 0x6d,
+	0xae, 0x86, 0xad, 0x16, 0x5d, 0x21, 0xda, 0xee, 0x32, 0x7e, 0x35, 0x7b, 0x56, 0x1a, 0xd1, 0x4b,
+	0xf3, 0x9e, 0xf8, 0x53, 0x7f, 0x36, 0x88, 0x8f, 0x35, 0x69, 0x04, 0x1b, 0x63, 0x8d, 0x52, 0x08,
+	0x52, 0x63, 0x8d, 0x9b, 0x5f, 0xc4, 0xee, 0x4d, 0x6b, 0xf4, 0x1f, 0xdf, 0xac, 0x1b, 0xff, 0x21,
+	0x71, 0xa4, 0xf6, 0x5a, 0xd4, 0x3e, 0xc2, 0xfb, 0x7d, 0x61, 0x3f, 0x68, 0x89, 0xe8, 0x36, 0xcb,
+	0x93, 0x87, 0x5d, 0x65, 0xd5, 0x35, 0x42, 0x89, 0x58, 0x4d, 0xfc, 0xe9, 0xd9, 0x6c, 0xb8, 0x18,
+	0xcd, 0xdb, 0x3b, 0x08, 0x2a, 0xae, 0xe7, 0x44, 0x08, 0xa4, 0x14, 0xd7, 0xed, 0x37, 0xd7, 0x43,
+	0xbd, 0xf8, 0xec, 0x21, 0x14, 0x50, 0xa5, 0x56, 0xc0, 0x5d, 0xc9, 0xc6, 0xb2, 0xe3, 0x5c, 0x76,
+	0x54, 0x9b, 0xfc, 0x5a, 0x75, 0xba, 0x75, 0x34, 0x4f, 0xdd, 0x20, 0x8a, 0xd9, 0xa4, 0x8e, 0x37,
+	0xee, 0x20, 0x0e, 0x36, 0xba, 0x1b, 0x52, 0xb4, 0xc8, 0x13, 0xc7, 0xa7, 0x22, 0xfd, 0x8f, 0xe3,
+	0x1a, 0xd8, 0x70, 0xc6, 0x0d, 0xf3, 0x17, 0xcf, 0xd3, 0xd4, 0x15, 0x06, 0x72, 0xc5, 0x7a, 0xe7,
+	0x13, 0x10, 0x3d, 0xfe, 0x71, 0x4f, 0xc1, 0x93, 0x97, 0x9c, 0xbb, 0xff, 0xb1, 0xfc, 0x0a, 0x00,
+	0x00, 0xff, 0xff, 0x5b, 0x9f, 0xd1, 0x85, 0x34, 0x02, 0x00, 0x00,
 }

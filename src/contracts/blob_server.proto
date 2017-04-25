@@ -2,7 +2,11 @@ syntax = "proto3";
 package blob_server;
 
 service Blobs {
-    rpc GetBlob(Filename) returns (Data) {}
+    rpc CreateBlob(PutData) returns (Empty) {}
+    rpc ReadBlob(Filename) returns (Data) {}
+    rpc UpdateBlob(PutData) returns (Empty) {}
+    rpc DeleteBlob(Filename) returns (Empty) {}
+    rpc ListBlobs(Empty) returns (BlobList) {}
 }
 
 message Filename {
@@ -11,4 +15,19 @@ message Filename {
 
 message Data {
     bytes data = 1;
+}
+
+message PutData {
+    string filename = 1;
+    bytes data = 2;
+}
+
+message Empty {}
+
+message BlobList {
+    repeated Blob blobs = 1;
+}
+
+message Blob {
+    string Filename = 1;
 }
