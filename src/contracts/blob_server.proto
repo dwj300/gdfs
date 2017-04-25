@@ -1,0 +1,14 @@
+syntax = "proto3";
+package blob_server;
+
+service Blobs {
+    rpc GetBlob(Filename) returns (Data) {}
+}
+
+message Filename {
+    string filename = 1;
+}
+
+message Data {
+    bytes data = 1;
+}
