@@ -32,7 +32,16 @@ func check(e error) {
 
 func (s *blobServer) CreateBlob(ctx context.Context, putData *pb.PutData) (*pb.Empty, error) {
 	grpclog.Println("CreateBlob called!")
-	var err = errors.New("[Not implemented]")
+	name := *dataDir + putData.Filename
+	if _, err := os.Stat(name); err == nil {
+		var err = errors.New("blob server: file already exists")
+		return &pb.Empty{}, err
+	}
+	f, err := os.Create(name)
+	check(err)
+	defer f.Close()
+	_, err = f.Write(putData.Data)
+	check(err)
 	return &pb.Empty{}, err
 }
 
@@ -50,13 +59,24 @@ func (s *blobServer) ReadBlob(ctx context.Context, filename *pb.Filename) (*pb.D
 
 func (s *blobServer) UpdateBlob(ctx context.Context, putData *pb.PutData) (*pb.Empty, error) {
 	grpclog.Println("UpdateBlob called!")
-	var err = errors.New("[Not implemented]")
+	name := *dataDir + putData.Filename
+	if _, err := os.Stat(name); err == nil {
+		f, err := os.OpenFile(name, os.O_WRONLY, 0644)
+		_, err = f.Write(putData.Data)
+		return &pb.Empty{}, err
+	}
+	var err = errors.New("blob server: file doesn't exist")
 	return &pb.Empty{}, err
 }
 
 func (s *blobServer) DeleteBlob(ctx context.Context, filename *pb.Filename) (*pb.Empty, error) {
 	grpclog.Println("Delete called!")
-	var err = errors.New("[Not implemented]")
+	name := *dataDir + filename.Filename
+	if _, err := os.Stat(name); err == nil {
+		err = os.Remove(name)
+		return &pb.Empty{}, err
+	}
+	var err = errors.New("blob server: file doesn't exist")
 	return &pb.Empty{}, err
 }
 
