@@ -82,8 +82,13 @@ func (s *blobServer) DeleteBlob(ctx context.Context, filename *pb.Filename) (*pb
 
 func (s *blobServer) ListBlobs(ctx context.Context, empty *pb.Empty) (*pb.BlobList, error) {
 	grpclog.Println("ListBlobs called!")
-	var err = errors.New("[Not implemented]")
-	return &pb.BlobList{}, err
+	files, _ := ioutil.ReadDir(*dataDir)
+	blobList := new(pb.BlobList)
+	for _, f := range files {
+		blob := &pb.Blob{Filename:f.Name()}
+		blobList.Blobs = append(blobList.Blobs, blob)
+	}
+	return blobList, nil
 }
 
 func main() {

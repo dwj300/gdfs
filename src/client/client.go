@@ -24,4 +24,6 @@ func main() {
 	client := pb.NewBlobsClient(conn)
 	data, err := client.ReadBlob(context.Background(), &pb.Filename{Filename:"dummy"})
 	grpclog.Println(string(data.Data))
+	data1, err := client.ListBlobs(context.Background(), &pb.Empty{})
+	grpclog.Println(data1.String())
 }
