@@ -1,0 +1,34 @@
+syntax = "proto3";
+package metadata_server;
+
+import "google/protobuf/timestamp.proto";
+
+service Blobs {
+    rpc CreateFile(Filename) returns (Empty) {}
+    rpc ReadFile(Filename) returns (File) {}
+    rpc UpdateBlob(File) returns (Empty) {}
+    rpc DeleteFile(Filename) returns (Empty) {}
+    rpc ListFiles(Empty) returns (FilenameList) {}
+}
+
+message Empty {}
+
+message Filename {
+    string filename = 1;
+}
+
+message FilenameList {
+    repeated Filename filenames = 1;
+}
+
+message Blob {
+    string server_id = 1;
+    string blob_index = 2;
+    string filename = 3;
+}
+
+message File {
+    repeated Blob blob_list = 1;
+    google.protobuf.Timestamp creation_time = 2;
+    google.protobuf.Timestamp modification_time = 3;
+}
